@@ -1,7 +1,6 @@
 import Vector from './Vector'
 import Grid from './Grid'
 import Config from './interfaces/Config'
-import Drawable from './interfaces/Drawable'
 import SnakeTile from './tiles/SnakeTile'
 import FruitTile from './tiles/FruitTile'
 import Direction, { useDirections } from './enums/Direction'
@@ -17,7 +16,7 @@ export default class Game {
   private tickrate: number
 
   private grid: Grid
-  private powerups: Map<TileType, Drawable> = new Map()
+  private powerups: Map<TileType, GridTile> = new Map()
 
   private directions: Map<Direction, Vector>
   private direction: Vector
@@ -114,7 +113,7 @@ export default class Game {
     const [x, y] = emptyFields[index].split(',')
     const fruitPosition = new Vector(parseInt(x), parseInt(y))
 
-    let powerup: GridTile&Drawable = new FruitTile(fruitPosition, this.config.tileSize, 'red')
+    let powerup: GridTile = new FruitTile(fruitPosition, this.config.tileSize, 'red')
 
     if (type == TileType.Boost) {
       powerup = new BoostTile(fruitPosition, this.config.tileSize, 'yellow')
@@ -136,8 +135,8 @@ export default class Game {
     switch (gridTile.type) {
       case TileType.Fruit:
         const tile = new SnakeTile(this.snake[0].getPosition(), this.config.tileSize, 'green')
-  
         this.snake.push(tile)
+
         this.spawnPowerup(TileType.Fruit)
         break
 

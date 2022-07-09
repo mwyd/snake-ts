@@ -1,11 +1,8 @@
+import config from './config'
 import Game from './modules/Game'
 
 import './style.css'
 
-const game = new Game({
-  tileSize: 20,
-  initLength: 3,
-  tickrate: 10
-})
+const game = new Game(config)
 
 game.start()

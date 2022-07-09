@@ -1,3 +1,4 @@
+import config from '../../config'
 import Vector from '../Vector'
 
 enum Direction {
@@ -9,9 +10,9 @@ enum Direction {
 
 export default Direction
 
-export const useDirections = (tileSize: number): Map<Direction, Vector> => new Map([
-  [Direction.Up, new Vector(0, -tileSize)],
-  [Direction.Down, new Vector(0, tileSize)],
-  [Direction.Left, new Vector(-tileSize, 0)],
-  [Direction.Right, new Vector(tileSize, 0)]
+export const directions: Map<Direction, Vector> = new Map([
+  [Direction.Up, new Vector(0, -config.tileSize)],
+  [Direction.Down, new Vector(0, config.tileSize)],
+  [Direction.Left, new Vector(-config.tileSize, 0)],
+  [Direction.Right, new Vector(config.tileSize, 0)]
 ])

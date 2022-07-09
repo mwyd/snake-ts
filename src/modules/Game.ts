@@ -3,7 +3,7 @@ import Grid from './Grid'
 import Config from './interfaces/Config'
 import SnakeTile from './tiles/SnakeTile'
 import FruitTile from './tiles/FruitTile'
-import Direction, { useDirections } from './enums/Direction'
+import Direction, { directions } from './enums/Direction'
 import TileType from './enums/TileType'
 import BoostTile from './tiles/BoostTile'
 import GridTile from './tiles/GridTile'
@@ -18,9 +18,6 @@ export default class Game {
   private grid: Grid
   private powerups: Map<TileType, GridTile> = new Map()
 
-  private directions: Map<Direction, Vector>
-  private direction: Vector
-
   private snake: SnakeTile[] = []
   private moveLock: boolean = false
 
@@ -28,10 +25,6 @@ export default class Game {
     private readonly config: Config
   ) {
     this.tickrate = this.config.tickrate
-
-    this.directions = useDirections(this.config.tileSize)
-    this.direction = this.directions.get(Direction.Right)!
-
     this.grid = new Grid(this.config.tileSize)
 
     this.initEvents()
@@ -65,9 +58,11 @@ export default class Game {
   }
 
   private initSnake(): void {
+    const direction = directions.get(Direction.Right)!
+
     for (let i = this.config.initLength - 1; i >= 0; i--) {
       const position = new Vector(i * this.config.tileSize, 0)
-      const tile = new SnakeTile(position, this.config.tileSize, 'green')
+      const tile = new SnakeTile(direction, position, this.config.tileSize, 'green')
 
       this.snake.push(tile)
       this.grid.set(position, tile)
@@ -79,22 +74,24 @@ export default class Game {
     this.grid.set(tail.getPosition(), null)
 
     for (let i = this.snake.length - 2; i >= 0; i--) {
+      this.snake[i + 1].setDirection(this.snake[i].getDirection())
       this.snake[i + 1].setPosition(this.snake[i].getPosition())
     }
 
     const head = this.snake[0]
+    const headDirection = head.getDirection()
 
     let nextHeadPosition = head
       .getPosition()
-      .add(this.direction)
+      .add(headDirection)
 
     if (nextHeadPosition.x < 0 || nextHeadPosition.x >= canvas.width) {
-      const modifier = this.direction.x > 0 ? -1 : 1
+      const modifier = headDirection.x > 0 ? -1 : 1
       nextHeadPosition = nextHeadPosition.add(new Vector(modifier * canvas.width, 0))
     }
 
     if (nextHeadPosition.y < 0 || nextHeadPosition.y >= canvas.height) {
-      const modifier = this.direction.y > 0 ? -1 : 1
+      const modifier = headDirection.y > 0 ? -1 : 1
       nextHeadPosition = nextHeadPosition.add(new Vector(0, modifier * canvas.height))
     }
 
@@ -134,7 +131,9 @@ export default class Game {
 
     switch (gridTile.type) {
       case TileType.Fruit:
-        const tile = new SnakeTile(this.snake[0].getPosition(), this.config.tileSize, 'green')
+        const head = this.snake[0]
+        const tile = new SnakeTile(head.getDirection(), head.getPosition(), this.config.tileSize, 'green')
+
         this.snake.push(tile)
 
         this.spawnPowerup(TileType.Fruit)
@@ -162,7 +161,10 @@ export default class Game {
         this.eat(gridTile)
 
         this.snake = this.snake.reverse()
-        this.direction = this.direction.multiply(new Vector(-1, -1))
+
+        for (const fragment of this.snake) {
+          fragment.setDirection(fragment.getDirection().multiply(new Vector(-1, -1)))
+        }
 
         this.spawnPowerup(TileType.Reverse)
         break
@@ -184,16 +186,17 @@ export default class Game {
         return
       }
 
-      const nextDirection = this.directions.get(e.key as Direction)
+      const head = this.snake[0]
+      const nextDirection = directions.get(e.key as Direction)
 
       if (!nextDirection) {
         return
       }
 
-      const mult = this.direction.multiply(nextDirection)
+      const mult = head.getDirection().multiply(nextDirection)
 
       if (mult.x == 0 && mult.y == 0) {
-        this.direction = nextDirection
+        head.setDirection(nextDirection)
         this.moveLock = true
       }
     })

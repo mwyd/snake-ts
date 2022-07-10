@@ -2,7 +2,7 @@ import Config from './modules/interfaces/Config'
 
 const config: Config = {
   debug: true,
-  tileSize: 40,
+  tileSize: 30,
   initLength: 3,
   tickrate: 10,
   snakeColor: 'green',

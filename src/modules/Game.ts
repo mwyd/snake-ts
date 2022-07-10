@@ -147,16 +147,17 @@ export default class Game {
 
     switch (tile.type) {
       case TileType.Fruit:
-        const head = this.snake[0]
+        const tail = this.snake[this.snake.length - 1]
         
         const snakeFragment = new SnakeTile(
-          head.getPosition(), 
-          head.getDirection(), 
+          tail.getPosition().add(tail.getDirection().multiply(new Vector(-1, -1))), 
+          tail.getDirection(), 
           this.config.tileSize, 
           this.config.snakeColor
         )
 
         this.snake.push(snakeFragment)
+        this.grid.set(snakeFragment.getPosition(), snakeFragment)
 
         this.spawnPowerup(TileType.Fruit)
         break

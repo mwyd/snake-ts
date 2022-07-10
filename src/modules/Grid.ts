@@ -34,8 +34,10 @@ export default class Grid {
   private initStructure(): void {
     for (let i = 0; i < canvas.width / this.tileSize; i++) {
       for (let j = 0; j < canvas.height / this.tileSize; j++) {
-        const position = new Vector(i * this.tileSize, j * this.tileSize)
-        this.structure.set(position.toString(), null)
+        this.set(
+          new Vector(i * this.tileSize, j * this.tileSize), 
+          null
+        )
       }
     }
   }

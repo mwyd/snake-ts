@@ -9,8 +9,12 @@ import BoostTile from './tiles/BoostTile'
 import GridTile from './tiles/GridTile'
 import ReverseTile from './tiles/ReverseTile'
 import GameState from './enums/GameState'
+import Logger from './interfaces/Logger'
+import NullLogger from './loggers/NullLogger'
 import { canvas, ctx } from './canvas'
 import { randomInRage } from './utils'
+
+const negationVector = new Vector(-1, -1)
 
 export default class Game {
   private intervalId?: number
@@ -25,7 +29,8 @@ export default class Game {
   private gameState!: GameState
 
   public constructor(
-    private readonly config: Config
+    private readonly config: Config,
+    private logger: Logger = new NullLogger()
   ) {
     this.tickrate = this.config.tickrate
     this.grid = new Grid(this.config.tileSize)
@@ -59,6 +64,10 @@ export default class Game {
     clearInterval(this.intervalId)
   }
 
+  public setLogger(logger: Logger) {
+    this.logger = logger
+  }
+
   private initSnake(): void {
     const direction = directions.get(Direction.Right)!
     
@@ -86,6 +95,8 @@ export default class Game {
 
     const head = this.snake[0]
     const headDirection = head.getDirection()
+
+    this.logger.logHeadPosition(head.getPosition())
 
     let nextHeadPosition = head
       .getPosition()
@@ -150,6 +161,8 @@ export default class Game {
       return
     }
 
+    this.logger.logHeadCollision(tile.type)
+
     switch (tile.type) {
       case TileType.Fruit:
         this.activateFruit()
@@ -173,7 +186,7 @@ export default class Game {
     const tail = this.snake[this.snake.length - 1]
         
     const snakeFragment = new SnakeTile(
-      tail.getPosition().add(tail.getDirection().multiply(new Vector(-1, -1))), 
+      tail.getPosition().add(tail.getDirection().multiply(negationVector)), 
       tail.getDirection(), 
       this.config.tileSize, 
       this.config.snakeColor
@@ -212,9 +225,21 @@ export default class Game {
 
     this.snake = this.snake.reverse()
 
-    for (const fragment of this.snake) {
-      fragment.setDirection(fragment.getDirection().multiply(new Vector(-1, -1)))
+    for (let i = this.snake.length - 2; i >= 0; i--) {
+      const prev = this.snake[i + 1]
+      const curr = this.snake[i]
+
+      const mult = prev.getDirection().multiply(curr.getDirection())
+
+      const direction = mult.x == 0 && mult.y == 0
+        ? curr.getDirection()
+        : prev.getDirection()
+
+      prev.setDirection(direction.multiply(negationVector))
     }
+
+    const head = this.snake[0]
+    head.setDirection(head.getDirection().multiply(negationVector))
 
     this.spawnPowerup(TileType.Reverse)
   }

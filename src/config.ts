@@ -1,7 +1,12 @@
 import Config from './modules/interfaces/Config'
 
+let DEBUG_MODE = false
+
+const toggleDebug = () => {
+  DEBUG_MODE = !DEBUG_MODE
+}
+
 const config: Config = {
-  debug: true,
   tileSize: 30,
   initLength: 3,
   tickrate: 10,
@@ -14,3 +19,8 @@ const config: Config = {
 }
 
 export default config
+
+export {
+  DEBUG_MODE,
+  toggleDebug
+}

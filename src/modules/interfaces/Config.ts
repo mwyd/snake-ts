@@ -1,5 +1,4 @@
 export default interface Config {
-  readonly debug: boolean,
   readonly tileSize: number,
   readonly initLength: number,
   readonly tickrate: number,

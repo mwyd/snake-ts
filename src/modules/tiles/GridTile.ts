@@ -1,7 +1,7 @@
 import TileType from '../enums/TileType'
 import Drawable from '../interfaces/Drawable'
 import Vector from '../Vector'
-import config from '../../config'
+import { DEBUG_MODE } from '../../config'
 import { ctx } from '../canvas'
 
 export default class GridTile implements Drawable {
@@ -34,7 +34,7 @@ export default class GridTile implements Drawable {
     ctx.fillStyle = this.color
     ctx.fillRect(this.position.x, this.position.y, this.size, this.size)
 
-    if (config.debug) {
+    if (DEBUG_MODE) {
       this.drawBounds()
       this.drawDirection()
     }

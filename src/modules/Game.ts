@@ -8,6 +8,7 @@ import TileType from './enums/TileType'
 import BoostTile from './tiles/BoostTile'
 import GridTile from './tiles/GridTile'
 import ReverseTile from './tiles/ReverseTile'
+import GameState from './enums/GameState'
 import { canvas, ctx } from './canvas'
 import { randomInRage } from './utils'
 
@@ -21,18 +22,21 @@ export default class Game {
   private snake: SnakeTile[] = []
   private moveLock: boolean = false
 
+  private gameState!: GameState
+
   public constructor(
     private readonly config: Config
   ) {
     this.tickrate = this.config.tickrate
     this.grid = new Grid(this.config.tileSize)
 
-    this.initEvents()
-    this.initPowerups()
     this.initSnake()
+    this.initPowerups()
+    this.initEvents()
   }
 
   public start(): void {
+    this.gameState = GameState.Running
     this.intervalId = setInterval(() => this.run(), 1000 / this.tickrate)
   }
 
@@ -51,6 +55,7 @@ export default class Game {
   }
 
   public stop(): void {
+    this.gameState = GameState.Finished
     clearInterval(this.intervalId)
   }
 
@@ -147,55 +152,71 @@ export default class Game {
 
     switch (tile.type) {
       case TileType.Fruit:
-        const tail = this.snake[this.snake.length - 1]
-        
-        const snakeFragment = new SnakeTile(
-          tail.getPosition().add(tail.getDirection().multiply(new Vector(-1, -1))), 
-          tail.getDirection(), 
-          this.config.tileSize, 
-          this.config.snakeColor
-        )
-
-        this.snake.push(snakeFragment)
-        this.grid.set(snakeFragment.getPosition(), snakeFragment)
-
-        this.spawnPowerup(TileType.Fruit)
+        this.activateFruit()
         break
 
       case TileType.Boost:
-        this.eat(tile)
-
-        this.tickrate *= 2
-
-        this.stop()
-        this.start()
-
-        setTimeout(() => {
-          this.tickrate = this.config.tickrate
-
-          this.stop()
-          this.start()
-
-          this.spawnPowerup(TileType.Boost)
-        }, this.config.boostTimeout)
+        this.activateBoost(tile)
         break
 
       case TileType.Reverse:
-        this.eat(tile)
-
-        this.snake = this.snake.reverse()
-
-        for (const fragment of this.snake) {
-          fragment.setDirection(fragment.getDirection().multiply(new Vector(-1, -1)))
-        }
-
-        this.spawnPowerup(TileType.Reverse)
+        this.activateReverse(tile)
         break
 
       case TileType.Snake:
         this.stop()
         break
     }
+  }
+
+  private activateFruit(): void {
+    const tail = this.snake[this.snake.length - 1]
+        
+    const snakeFragment = new SnakeTile(
+      tail.getPosition().add(tail.getDirection().multiply(new Vector(-1, -1))), 
+      tail.getDirection(), 
+      this.config.tileSize, 
+      this.config.snakeColor
+    )
+
+    this.snake.push(snakeFragment)
+    this.grid.set(snakeFragment.getPosition(), snakeFragment)
+
+    this.spawnPowerup(TileType.Fruit)
+  }
+
+  private activateBoost(tile: GridTile): void {
+    this.eat(tile)
+
+    this.tickrate *= 2
+
+    this.stop()
+    this.start()
+
+    setTimeout(() => {
+      if (this.gameState != GameState.Running) {
+        return
+      }
+
+      this.tickrate = this.config.tickrate
+
+      this.stop()
+      this.start()
+
+      this.spawnPowerup(TileType.Boost)
+    }, this.config.boostTimeout)
+  }
+
+  private activateReverse(tile: GridTile): void {
+    this.eat(tile)
+
+    this.snake = this.snake.reverse()
+
+    for (const fragment of this.snake) {
+      fragment.setDirection(fragment.getDirection().multiply(new Vector(-1, -1)))
+    }
+
+    this.spawnPowerup(TileType.Reverse)
   }
 
   private eat(tile: GridTile): void {

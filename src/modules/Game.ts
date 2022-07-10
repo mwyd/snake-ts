@@ -28,11 +28,8 @@ export default class Game {
     this.grid = new Grid(this.config.tileSize)
 
     this.initEvents()
+    this.initPowerups()
     this.initSnake()
-
-    this.spawnPowerup(TileType.Fruit)
-    this.spawnPowerup(TileType.Boost)
-    this.spawnPowerup(TileType.Reverse)
   }
 
   public start(): void {
@@ -59,13 +56,17 @@ export default class Game {
 
   private initSnake(): void {
     const direction = directions.get(Direction.Right)!
-
+    
     for (let i = this.config.initLength - 1; i >= 0; i--) {
-      const position = new Vector(i * this.config.tileSize, 0)
-      const tile = new SnakeTile(direction, position, this.config.tileSize, 'green')
+      const tile = new SnakeTile(
+        new Vector(i * this.config.tileSize, 0), 
+        direction, 
+        this.config.tileSize, 
+        this.config.snakeColor
+      )
 
       this.snake.push(tile)
-      this.grid.set(position, tile)
+      this.grid.set(tile.getPosition(), tile)
     }
   }
 
@@ -106,41 +107,62 @@ export default class Game {
     const emptyFields = this.grid.getEmpty()
 
     const index = randomInRage(0, emptyFields.length - 1)
-
     const [x, y] = emptyFields[index].split(',')
-    const fruitPosition = new Vector(parseInt(x), parseInt(y))
 
-    let powerup: GridTile = new FruitTile(fruitPosition, this.config.tileSize, 'red')
+    const position = new Vector(
+      parseInt(x), 
+      parseInt(y)
+    )
+
+    const direction = directions.get(Direction.Right)!
+    const defaultParams: [Vector, Vector, number] = [position, direction, this.config.tileSize]
+
+    let powerup: GridTile = new FruitTile(
+      ...defaultParams,
+      this.config.fruitColor
+    )
 
     if (type == TileType.Boost) {
-      powerup = new BoostTile(fruitPosition, this.config.tileSize, 'yellow')
+      powerup = new BoostTile(
+        ...defaultParams,
+        this.config.boostColor
+      )
     } else if(type == TileType.Reverse) {
-      powerup = new ReverseTile(fruitPosition, this.config.tileSize, 'purple')
+      powerup = new ReverseTile(
+        ...defaultParams,
+        this.config.reverseColor
+      )
     }
 
     this.powerups.set(type, powerup)
-    this.grid.set(fruitPosition, powerup)
+    this.grid.set(position, powerup)
   }
 
   private checkCollision(position: Vector): void {
-    const gridTile = this.grid.get(position)
+    const tile = this.grid.get(position)
 
-    if (!gridTile) {
+    if (!tile) {
       return
     }
 
-    switch (gridTile.type) {
+    switch (tile.type) {
       case TileType.Fruit:
         const head = this.snake[0]
-        const tile = new SnakeTile(head.getDirection(), head.getPosition(), this.config.tileSize, 'green')
+        
+        const snakeFragment = new SnakeTile(
+          head.getPosition(), 
+          head.getDirection(), 
+          this.config.tileSize, 
+          this.config.snakeColor
+        )
 
-        this.snake.push(tile)
+        this.snake.push(snakeFragment)
 
         this.spawnPowerup(TileType.Fruit)
         break
 
       case TileType.Boost:
-        this.eat(gridTile)
+        this.eat(tile)
 
         this.tickrate *= 2
 
@@ -154,11 +176,11 @@ export default class Game {
           this.start()
 
           this.spawnPowerup(TileType.Boost)
-        }, 4 * 1000)
+        }, this.config.boostTimeout)
         break
 
       case TileType.Reverse:
-        this.eat(gridTile)
+        this.eat(tile)
 
         this.snake = this.snake.reverse()
 
@@ -202,7 +224,14 @@ export default class Game {
     })
   }
 
+  private initPowerups(): void {
+    this.spawnPowerup(TileType.Fruit)
+    this.spawnPowerup(TileType.Boost)
+    this.spawnPowerup(TileType.Reverse)
+  }
+
   private clear(): void {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    ctx.fillStyle = this.config.boardColor
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
   }
 }

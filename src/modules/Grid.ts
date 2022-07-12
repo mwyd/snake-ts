@@ -19,12 +19,17 @@ export default class Grid {
     return this.structure.get(key.toString()) || null
   }
 
-  public getEmpty(): string[] {
+  public getEmpty(): Vector[] {
     const empty = []
 
     for (let [key, tile] of this.structure) {
       if (!tile) {
-        empty.push(key)
+        const [ x, y ] = key.split(',')
+        
+        empty.push(new Vector(
+            Number(x),
+            Number(y)
+        ))
       }
     }
 

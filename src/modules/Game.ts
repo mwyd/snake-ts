@@ -64,7 +64,7 @@ export default class Game {
     clearInterval(this.intervalId)
   }
 
-  public setLogger(logger: Logger) {
+  public setLogger(logger: Logger): void {
     this.logger = logger
   }
 
@@ -123,14 +123,10 @@ export default class Game {
     const emptyFields = this.grid.getEmpty()
 
     const index = randomInRage(0, emptyFields.length - 1)
-    const [x, y] = emptyFields[index].split(',')
 
-    const position = new Vector(
-      parseInt(x), 
-      parseInt(y)
-    )
-
+    const position = emptyFields[index]
     const direction = directions.get(Direction.Right)!
+
     const defaultParams: [Vector, Vector, number] = [position, direction, this.config.tileSize]
 
     let powerup: GridTile = new FruitTile(

@@ -60,7 +60,7 @@ export default class GridTile implements Drawable {
     const { x, y } = this.position
 
     const center = new Vector(x + this.size / 2, y + this.size / 2)
-    const mult = center.add(this.direction)
+    const sum = center.add(this.direction)
 
     ctx.fillStyle = 'lime'
     ctx.strokeStyle = 'lime'
@@ -68,7 +68,7 @@ export default class GridTile implements Drawable {
     ctx.beginPath()
 
     ctx.moveTo(center.x, center.y)
-    ctx.lineTo(mult.x, mult.y)
+    ctx.lineTo(sum.x, sum.y)
 
     ctx.stroke()
 
